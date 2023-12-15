@@ -8,6 +8,7 @@
     "baseUrl": ".",
     "useDefineForClassFields": false,
     "experimentalDecorators": true,
+    "allowJs": true,
     "paths": {
       "@/*": ["./src/*"]
     }
