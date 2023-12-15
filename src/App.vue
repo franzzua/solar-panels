@@ -6,20 +6,17 @@ import "./assets/base.css";
 
 const rotation = ref(0)
 const size = ref({width: 1, height: 2})
-const add = () => solarStore.addPanel(size.value, rotation.value);
-const keyboardHandler = (e: KeyboardEvent) => {
-  const direction = {
-    ArrowLeft: 'left',
-    ArrowRight: 'right',
-    ArrowUp: 'top',
-    ArrowDown: 'bottom',
-  }[e.key] as Direction | undefined;
-  if (direction && solarStore.selectedPanel) {
-    solarStore.cloneSelectedAndMove(direction);
-  }
-}
-onMounted(() => window.addEventListener('keyup', keyboardHandler));
-onBeforeUnmount(() => window.removeEventListener('keyup', keyboardHandler));
+const add = () => solarStore.addPanel(
+    rotation.value == 0 ? size.value : {width: size.value.height, height: size.value.width},
+    0
+);
+solarStore.on('change', e => {
+  localStorage.setItem('data', JSON.stringify(e));
+});
+onMounted(() => {
+  const data = JSON.parse(localStorage.getItem('data') ?? '[]');
+  solarStore.load(data);
+})
 </script>
 
 <template>

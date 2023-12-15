@@ -1,9 +1,20 @@
 import type {GeoPoint} from "@/services/geo.util";
 import type {FeatureCollection, Polygon} from "geojson";
 import {Panel} from "@/services/panel";
-import {cell, ObservableList} from "@cmmn/cell";
+import {Cell, cell, ObservableList} from "@cmmn/cell";
+import {EventEmitter, compare} from "@cmmn/core"
+class SolarStore extends EventEmitter<{
+    change: Array<PanelJSON>
+}>{
+    constructor() {
+        super();
+        Cell.OnChange(
+            () => this.panels.map(x => x.toJSON()),
+            {compare},
+                e => this.emit('change', e.value)
+        );
+    }
 
-class SolarStore {
     @cell
     panels = new ObservableList<Panel>();
     public getMapPosition!: () => ({center: GeoPoint, zoom: number;});
@@ -44,6 +55,10 @@ class SolarStore {
         newPanel.move(direction);
         this.panels.push(newPanel);
         this.selectedPanel = newPanel;
+    }
+
+    public load(data: Array<PanelJSON>){
+        this.panels = new ObservableList<Panel>(data.map(x => new Panel(x.center, x.size, x.rotation)))
     }
 }
 export const solarStore = new SolarStore();

@@ -2,6 +2,7 @@ import {GeoJSONSource, Map as MapTilerMap, MapStyle, Marker} from "@maptiler/sdk
 import {solarStore} from "@/services/store";
 import {Cell} from "@cmmn/cell";
 import type {Panel} from "@/services/panel";
+import {type GeoPoint, GeoUtil} from "@/services/geo.util";
 
 export class MapHandler{
     private map = new MapTilerMap({
@@ -10,7 +11,8 @@ export class MapHandler{
         style: MapStyle.SATELLITE,
         center: [7.509, 58.0131],
     });
-    private marker: Marker | undefined;
+    private rotateMarker: Marker | undefined;
+    private moveMarker: Marker | undefined;
     constructor(private element: HTMLElement) {
         console.log('create map')
         this.map.on('click',  e => {
@@ -18,19 +20,6 @@ export class MapHandler{
         })
         this.map.on('load', () => this.onLoad());
         this.map.keyboard.disable();
-        Cell.OnChange(() => solarStore.geoJson, e => {
-            const panelSource = this.map.getSource('panels') as GeoJSONSource;
-            panelSource.setData(e.value);
-        })
-        Cell.OnChange(() => solarStore.geoJsonSelected, e => {
-            const panelSource = this.map.getSource('selectedPanels') as GeoJSONSource;
-            panelSource.setData(e.value);
-        })
-        Cell.OnChange(
-            () => solarStore.selectedPanel,
-            {compareKey: x => x?.id},
-                e => this.createMarker(e.value)
-        );
 
         this.createMarker(solarStore.selectedPanel)
 
@@ -42,28 +31,54 @@ export class MapHandler{
     }
 
     createMarker(panel: Panel | undefined){
-        if (this.marker){
-            this.marker.remove();
-            this.marker = undefined;
+        if (this.rotateMarker){
+            this.rotateMarker.remove();
+            this.rotateMarker = undefined;
+        }
+        if (this.moveMarker){
+            this.moveMarker.remove();
+            this.moveMarker = undefined;
         }
         if (!panel)
             return;
         const div = document.createElement('div');
         div.className = 'marker';
-        const marker = new Marker({
+        this.rotateMarker = new Marker({
             element: div,
             offset: [0,0],
             draggable: true,
         }).setLngLat(panel.markerPosition).addTo(this.map);
-        marker.on('drag', e => {
-            const lngLat = marker.getLngLat();
+        this.rotateMarker.on('drag', e => {
+            const lngLat = this.rotateMarker!.getLngLat();
             panel.rotate(lngLat);
+            this.rotateMarker!.setLngLat(panel.markerPosition);
         });
-        marker.on('dragend', e => {
-            marker.setLngLat(panel.markerPosition);
+        this.rotateMarker.on('dragend', e => {
+            this.rotateMarker!.setLngLat(panel.markerPosition);
         });
-
-        return marker;
+        const div2 = document.createElement('div');
+        div2.className = 'move-marker';
+        this.moveMarker = new Marker({
+            element: div2,
+            offset: [0,0],
+            draggable: true,
+        }).setLngLat(panel.center).addTo(this.map);
+        let dragShift: GeoPoint | undefined;
+        this.moveMarker.on('dragstart', e => {
+            const lngLat = this.moveMarker!.getLngLat();
+            dragShift = GeoUtil.sub(panel.center, lngLat);
+        });
+        this.moveMarker.on('drag', e => {
+            const lngLat = this.moveMarker!.getLngLat();
+            panel.setCenter(GeoUtil.sum(lngLat, dragShift!));
+            this.rotateMarker!.setLngLat(panel.markerPosition);
+        });
+        this.moveMarker.on('dragend', e => {
+            const lngLat = this.moveMarker!.getLngLat();
+            panel.setCenter(GeoUtil.sum(lngLat, dragShift!));
+            this.rotateMarker!.setLngLat(panel.markerPosition);
+            dragShift = undefined;
+        });
     }
 
     onLoad(){
@@ -76,19 +91,6 @@ export class MapHandler{
             data: solarStore.geoJsonSelected
         });
         this.map.addLayer({
-            'id': 'selectedPanels',
-            'type': 'line',
-            'source': 'selectedPanels',
-            'layout': {
-                'line-join': 'round',
-                'line-cap': 'round'
-            },
-            'paint': {
-                'line-color': '#A22',
-                'line-width': 8
-            }
-        });
-        this.map.addLayer({
             'id': 'panels',
             'type': 'fill',
             'source': 'panels',
@@ -97,6 +99,42 @@ export class MapHandler{
                 'fill-color': '#000',
                 'fill-opacity': 0.8
             }
+        });
+        this.map.addLayer({
+            'id': 'selectedPanels',
+            'type': 'line',
+            'source': 'selectedPanels',
+            'layout': {
+                'line-join': 'round',
+                'line-cap': 'round',
+            },
+            'paint': {
+                'line-color': '#A22',
+                'line-width': 2
+            }
+        });
+
+        Cell.OnChange(() => solarStore.geoJson, e => {
+            const panelSource = this.map.getSource('panels') as GeoJSONSource;
+            panelSource.setData(e.value);
+        })
+        Cell.OnChange(() => solarStore.geoJsonSelected, e => {
+            const panelSource = this.map.getSource('selectedPanels') as GeoJSONSource;
+            panelSource.setData(e.value);
+        })
+        Cell.OnChange(
+            () => solarStore.selectedPanel,
+            {compareKey: x => x?.id},
+            e => this.createMarker(e.value)
+        );
+        // Change the cursor to a pointer when the mouse is over the states layer.
+        this.map.on('mouseenter', 'panels', () => {
+            this.map.getCanvas().style.cursor = 'move';
+        });
+
+        // Change it back to a pointer when it leaves.
+        this.map.on('mouseleave', 'panels', () => {
+            this.map.getCanvas().style.cursor = '';
         });
     }
 }

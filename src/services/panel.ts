@@ -16,7 +16,7 @@ export class Panel{
         this.rotation = rotation;
     }
     @cell
-    private center: GeoPoint;
+    center: GeoPoint;
     @cell
     private rotation: number;
 
@@ -101,5 +101,17 @@ export class Panel{
     rotate(lngLat: GeoPoint){
         const point = GeoUtil.fromGeo(GeoUtil.sub(lngLat, this.center), this.center.lat);
         this.rotation = Math.atan2(point.y, point.x)*180/Math.PI - 90;
+    }
+
+    setCenter(point: GeoPoint){
+        this.center = point;
+    }
+
+    public toJSON(): PanelJSON{
+        return {
+            center: {...this.center},
+            rotation: this.rotation,
+            size: {...this.size}
+        };
     }
 }

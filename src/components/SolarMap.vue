@@ -1,14 +1,28 @@
-<script setup>
+<script setup lang="ts">
 import {config} from '@maptiler/sdk';
-import {onMounted, shallowRef} from "vue";
-import {MapHandler} from "@/components/map-handler.ts";
+import {onBeforeUnmount, onMounted, shallowRef} from "vue";
+import {MapHandler} from "@/components/map-handler";
 import '@maptiler/sdk/dist/maptiler-sdk.css';
+import {solarStore} from "@/services/store";
 
-const mapContainer = shallowRef(null);
+const keyboardHandler = (e: KeyboardEvent) => {
+  const direction = {
+    ArrowLeft: 'left',
+    ArrowRight: 'right',
+    ArrowUp: 'top',
+    ArrowDown: 'bottom',
+  }[e.key] as Direction | undefined;
+  if (direction && solarStore.selectedPanel) {
+    solarStore.cloneSelectedAndMove(direction);
+  }
+}
+const mapContainer = shallowRef<HTMLElement | null>(null);
 config.apiKey = 'LrAb6HjnrM0QAkRImnPk';
 onMounted(() => {
-  new MapHandler(mapContainer.value);
+  new MapHandler(mapContainer.value!);
+  window.addEventListener('keyup', keyboardHandler)
 })
+onBeforeUnmount(() => window.removeEventListener('keyup', keyboardHandler));
 </script>
 <template>
   <div ref="mapContainer" class="container"></div>
