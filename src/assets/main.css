@@ -1,0 +1,9 @@
+.marker {
+    background: #2c3e50A0;
+    width: 12px;
+    height: 12px;
+    border-radius: 6px;
+}
+.marker:hover{
+    background: #8c3e50;
+}
