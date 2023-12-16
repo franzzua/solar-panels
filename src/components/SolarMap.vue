@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import {config} from '@maptiler/sdk';
 import {onBeforeUnmount, onMounted, shallowRef} from "vue";
-import {MapHandler} from "@/components/map-handler";
+import {MapHandler} from "@/maps/map-handler";
 import '@maptiler/sdk/dist/maptiler-sdk.css';
 import {solarStore} from "@/services/store";
 
@@ -17,7 +16,6 @@ const keyboardHandler = (e: KeyboardEvent) => {
   }
 }
 const mapContainer = shallowRef<HTMLElement | null>(null);
-config.apiKey = 'LrAb6HjnrM0QAkRImnPk';
 onMounted(() => {
   new MapHandler(mapContainer.value!);
   window.addEventListener('keyup', keyboardHandler)

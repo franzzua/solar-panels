@@ -3,9 +3,19 @@ import SolarMap from "@/components/SolarMap.vue";
 import {solarStore} from "@/services/store";
 import {onBeforeUnmount, onMounted, ref} from "vue";
 import "./assets/base.css";
+import {BingSource} from "@/maps/sources/bing-source";
+import {GoogleSource} from "@/maps/sources/google-source";
 
 const rotation = ref(0)
 const size = ref({width: 1, height: 2})
+const sources = [
+  new GoogleSource(GOOGLE_API_KEY),
+  new BingSource(BING_API_KEY)
+]
+solarStore.tileSource = sources[0];
+function changeTileSource(id){
+  solarStore.tileSource = sources.find(x => x.id == id);
+}
 const add = () => solarStore.addPanel(
     rotation.value == 0 ? size.value : {width: size.value.height, height: size.value.width},
     0
@@ -21,8 +31,15 @@ onMounted(() => {
 
 <template>
   <div class="container">
-  <SolarMap class="map"/>
+    <SolarMap class="map"/>
     <div class="panel">
+      <label>
+        <span>Tile Source</span>
+        <select :value="solarStore.tileSource?.id" @change="changeTileSource($event.target.value)">
+          <option value="google">Google</option>
+          <option value="bing">Bing</option>
+        </select>
+      </label>
       <div class="selectDegree">
         <label>
           <input type="radio" value="0" :checked="rotation == 0" @click="rotation = 0">
@@ -52,7 +69,7 @@ onMounted(() => {
 .panel{
   width: 20vw;
   position: absolute;
-  right: 5px;
+  left: 5px;
   top: 5px;
   background: #FFF3;
   backdrop-filter: blur(3px);

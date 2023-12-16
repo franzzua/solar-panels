@@ -3,6 +3,8 @@ import type {FeatureCollection, Polygon} from "geojson";
 import {Panel} from "@/services/panel";
 import {Cell, cell, ObservableList} from "@cmmn/cell";
 import {EventEmitter, compare} from "@cmmn/core"
+import type {TileSource} from "@/maps/tile-source";
+import {GoogleSource} from "@/maps/sources/google-source";
 class SolarStore extends EventEmitter<{
     change: Array<PanelJSON>
 }>{
@@ -20,6 +22,8 @@ class SolarStore extends EventEmitter<{
     public getMapPosition!: () => ({center: GeoPoint, zoom: number;});
     @cell
     public selectedPanel: Panel | undefined;
+    @cell
+    public tileSource: TileSource;
     public addPanel(size: {width: number; height: number}, rotation: number){
         const position = this.getMapPosition();
         this.panels.push(new Panel(position.center, size, rotation));

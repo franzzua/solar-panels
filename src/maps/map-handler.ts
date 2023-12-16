@@ -1,20 +1,27 @@
-import {GeoJSONSource, Map as MapTilerMap, MapStyle, Marker} from "@maptiler/sdk";
+import {GeoJSONSource, Map as MapTilerMap, MapStyle, Marker, config} from "@maptiler/sdk";
 import {solarStore} from "@/services/store";
 import {Cell} from "@cmmn/cell";
 import type {Panel} from "@/services/panel";
 import {type GeoPoint, GeoUtil} from "@/services/geo.util";
+import type {TileSource} from "@/maps/tile-source";
+import {GoogleSource} from "@/maps/sources/google-source";
 
+config.apiKey = MAP_TILER_API_KEY;
 export class MapHandler{
     private map = new MapTilerMap({
         container: this.element,
         zoom: 19,
-        style: MapStyle.SATELLITE,
+        style: {
+            layers: [],
+            version: 8,
+            sources: {}
+        },
         center: [7.509, 58.0131],
     });
     private rotateMarker: Marker | undefined;
     private moveMarker: Marker | undefined;
     constructor(private element: HTMLElement) {
-        console.log('create map')
+        console.log('create map', MAP_TILER_API_KEY)
         this.map.on('click',  e => {
             solarStore.selectPanel(e.lngLat);
         })
@@ -81,7 +88,39 @@ export class MapHandler{
         });
     }
 
-    onLoad(){
+    async onLoad(){
+        await this.setTileSource(solarStore.tileSource);
+        
+
+        Cell.OnChange(() => solarStore.geoJson, e => {
+            const panelSource = this.map.getSource('panels') as GeoJSONSource;
+            panelSource.setData(e.value);
+        })
+        Cell.OnChange(() => solarStore.geoJsonSelected, e => {
+            const panelSource = this.map.getSource('selectedPanels') as GeoJSONSource;
+            panelSource.setData(e.value);
+        })
+        Cell.OnChange(
+            () => solarStore.selectedPanel,
+            {compareKey: x => x?.id},
+            e => this.createMarker(e.value)
+        );
+        // Change the cursor to a pointer when the mouse is over the states layer.
+        this.map.on('mouseenter', 'panels', () => {
+            this.map.getCanvas().style.cursor = 'move';
+        });
+
+        // Change it back to a pointer when it leaves.
+        this.map.on('mouseleave', 'panels', () => {
+            this.map.getCanvas().style.cursor = '';
+        });
+        
+        Cell.OnChange(() => solarStore.tileSource, {compareKey: x => x.id}, e => this.setTileSource(e.value));
+    }
+    async setTileSource(source: TileSource){
+        if (!source) return;
+        await source.load();
+        this.map.setStyle(source.Style);
         this.map.addSource('panels', {
             type: 'geojson',
             data: solarStore.geoJson
@@ -113,28 +152,7 @@ export class MapHandler{
                 'line-width': 2
             }
         });
-
-        Cell.OnChange(() => solarStore.geoJson, e => {
-            const panelSource = this.map.getSource('panels') as GeoJSONSource;
-            panelSource.setData(e.value);
-        })
-        Cell.OnChange(() => solarStore.geoJsonSelected, e => {
-            const panelSource = this.map.getSource('selectedPanels') as GeoJSONSource;
-            panelSource.setData(e.value);
-        })
-        Cell.OnChange(
-            () => solarStore.selectedPanel,
-            {compareKey: x => x?.id},
-            e => this.createMarker(e.value)
-        );
-        // Change the cursor to a pointer when the mouse is over the states layer.
-        this.map.on('mouseenter', 'panels', () => {
-            this.map.getCanvas().style.cursor = 'move';
-        });
-
-        // Change it back to a pointer when it leaves.
-        this.map.on('mouseleave', 'panels', () => {
-            this.map.getCanvas().style.cursor = '';
-        });
     }
+    
+    
 }

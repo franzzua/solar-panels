@@ -24,6 +24,10 @@ jobs:
           node-version: 20
       - run: yarn
       - run: yarn run build
+        env:
+          BING_API_KEY: ${{ secrets.BING_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          MAP_TILER_API_KEY: ${{ secrets.MAP_TILER_API_KEY }}
       - name: Deploy
         uses: Azure/static-web-apps-deploy@v1
         with:
