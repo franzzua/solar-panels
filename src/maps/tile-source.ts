@@ -1,5 +1,5 @@
 import {EventEmitter} from "@cmmn/core";
-
+import type {ReferenceMapStyle, StyleSpecification} from "@maptiler/sdk";
 export abstract class TileSource extends EventEmitter<{
     change: void
 }>{
@@ -18,7 +18,7 @@ export abstract class TileSource extends EventEmitter<{
     protected saveToken(token: any){
         return localStorage.setItem(this.id+'token', JSON.stringify(token));
     }
-    get Style(){
+    get Style(): ReferenceMapStyle | StyleSpecification {
         return {
             sources: {
                 [this.id]: {

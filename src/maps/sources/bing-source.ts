@@ -9,13 +9,13 @@ export class BingSource extends TileSource{
     }
     public async load(){
         const saved = this.readToken() as Token;
-        if (saved && new Date((+saved.expiry)*1000) > new Date()){
+        if (saved){
             this.data = saved;
             return;
         }
         if (!this.apiKey)
             throw new Error(`Bing Map Api Key is not provided`);
-        const result = await fetch(`https://dev.virtualearth.net/REST/v1/Imagery/Metadata/Aerial?key=${this.apiKey}`).then(x => x.json()) as Token;
+        const result = await fetch(`https://dev.virtualearth.net/REST/v1/Imagery/Metadata/Aerial?key=${this.apiKey}`).then(x => x.json());
         if (result.statusCode != '200')
             throw new Error(`Bing Map Api Failure`);
         console.log(result)
@@ -23,7 +23,9 @@ export class BingSource extends TileSource{
         this.saveToken(this.data);
     }
     public get URI(){
-        return this.data?.imageUrl.replace('{subdomain}', this.data?.imageUrlSubdomains[0]);
+        if (!this.data)
+            throw new Error(`BingSource is not initialized`)
+        return this.data.imageUrl.replace('{subdomain}', this.data?.imageUrlSubdomains[0]);
     }
 
     get minZoom(){

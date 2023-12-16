@@ -23,7 +23,7 @@ class SolarStore extends EventEmitter<{
     @cell
     public selectedPanel: Panel | undefined;
     @cell
-    public tileSource: TileSource;
+    public tileSource: TileSource | undefined;
     public addPanel(size: {width: number; height: number}, rotation: number){
         const position = this.getMapPosition();
         this.panels.push(new Panel(position.center, size, rotation));

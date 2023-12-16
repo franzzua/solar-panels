@@ -34,15 +34,16 @@ export class GoogleSource extends TileSource{
     }
     
     private setTimer(){
+        if (!this.token) return;
         setTimeout(async () => {
-            this.token = null;
+            this.token = undefined;
             this.saveToken(null);
             this.emit('change');
         }, (+this.token.expiry)*1000 - +new Date());
     }
     
     public get URI(){
-        return `https://tile.googleapis.com/v1/2dtiles/{z}/{x}/{y}?session=${this.token.session}&key=${this.apiKey}`
+        return `https://tile.googleapis.com/v1/2dtiles/{z}/{x}/{y}?session=${this.token?.session}&key=${this.apiKey}`
     }
     
 

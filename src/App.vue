@@ -5,15 +5,16 @@ import {onBeforeUnmount, onMounted, ref} from "vue";
 import "./assets/base.css";
 import {BingSource} from "@/maps/sources/bing-source";
 import {GoogleSource} from "@/maps/sources/google-source";
+import type {TileSource} from "@/maps/tile-source";
 
 const rotation = ref(0)
 const size = ref({width: 1, height: 2})
-const sources = [
+const sources: Array<TileSource> = [
   new GoogleSource(GOOGLE_API_KEY),
   new BingSource(BING_API_KEY)
 ]
 solarStore.tileSource = sources[0];
-function changeTileSource(id){
+function changeTileSource(id: string){
   solarStore.tileSource = sources.find(x => x.id == id);
 }
 const add = () => solarStore.addPanel(
@@ -35,7 +36,7 @@ onMounted(() => {
     <div class="panel">
       <label>
         <span>Tile Source</span>
-        <select :value="solarStore.tileSource?.id" @change="changeTileSource($event.target.value)">
+        <select :value="solarStore.tileSource?.id" @change="changeTileSource(($event.target as any).value)">
           <option value="google">Google</option>
           <option value="bing">Bing</option>
         </select>

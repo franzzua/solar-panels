@@ -115,9 +115,9 @@ export class MapHandler{
             this.map.getCanvas().style.cursor = '';
         });
         
-        Cell.OnChange(() => solarStore.tileSource, {compareKey: x => x.id}, e => this.setTileSource(e.value));
+        Cell.OnChange(() => solarStore.tileSource, {compareKey: x => x?.id}, e => this.setTileSource(e.value));
     }
-    async setTileSource(source: TileSource){
+    async setTileSource(source: TileSource | undefined){
         if (!source) return;
         await source.load();
         this.map.setStyle(source.Style);
