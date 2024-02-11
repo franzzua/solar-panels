@@ -10,7 +10,7 @@ import type {TileSource} from "@/maps/tile-source";
 const rotation = ref(0)
 const size = ref({width: 1, height: 2})
 const sources: Array<TileSource> = [
-  new GoogleSource(GOOGLE_API_KEY),
+  // new GoogleSource(GOOGLE_API_KEY),
   new BingSource(BING_API_KEY)
 ]
 solarStore.tileSource = sources[0];
