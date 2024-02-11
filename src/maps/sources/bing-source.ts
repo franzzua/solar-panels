@@ -18,7 +18,6 @@ export class BingSource extends TileSource{
         const result = await fetch(`https://dev.virtualearth.net/REST/v1/Imagery/Metadata/Aerial?key=${this.apiKey}`).then(x => x.json());
         if (result.statusCode != '200')
             throw new Error(`Bing Map Api Failure`);
-        console.log(result)
         this.data = result.resourceSets[0].resources[0];
         this.saveToken(this.data);
     }

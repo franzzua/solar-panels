@@ -10,13 +10,19 @@ export abstract class TileSource extends EventEmitter<{
     
     protected readToken(){
         try{
-            return JSON.parse(localStorage.getItem(this.id+'token') ?? "null");
-        }catch (e){
+            const token = JSON.parse(localStorage.getItem(this.id+'token') ?? "null");
+            if (!token || token._expiresAt < new Date())
+                return null;
+            return token;
+        }catch (e) {
             return null;
         }
     }
     protected saveToken(token: any){
-        return localStorage.setItem(this.id+'token', JSON.stringify(token));
+        return localStorage.setItem(this.id+'token', JSON.stringify({
+            ...token,
+            _expiresAt: +new Date()+1000*60*60
+        }));
     }
     get Style(): ReferenceMapStyle | StyleSpecification {
         return {
