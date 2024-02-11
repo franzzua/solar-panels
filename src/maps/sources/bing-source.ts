@@ -25,7 +25,9 @@ export class BingSource extends TileSource{
     public get URI(){
         if (!this.data)
             throw new Error(`BingSource is not initialized`)
-        return this.data.imageUrl.replace('{subdomain}', this.data?.imageUrlSubdomains[0]);
+        return this.data.imageUrl
+            .replace('http://', 'https://')
+            .replace('{subdomain}', this.data?.imageUrlSubdomains[0]);
     }
 
     get minZoom(){
